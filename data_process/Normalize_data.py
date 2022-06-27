@@ -7,7 +7,7 @@ sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 from data_process.data_process_func import *
 import SimpleITK as sitk
 
-data_root = '../../../Data/HaN/'
+data_root = 'data/HaN'
 filename = 'rdata.nii.gz'
 savename = 'norm_rdata.nii.gz'
 modelist = ['train','valid','test']

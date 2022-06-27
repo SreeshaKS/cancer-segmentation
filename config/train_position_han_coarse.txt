@@ -1,5 +1,5 @@
 [data]
-data_root             = ../../Data/HaN
+data_root             = data/HaN
 image_name            = norm_rdata.nii.gz
 label_name            = 
 iter_num              = 8000

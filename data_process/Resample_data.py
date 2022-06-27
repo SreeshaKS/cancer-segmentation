@@ -34,8 +34,8 @@ def crop_and_resample(data_save_path, label_save_path, data_path, label_path, cl
     img = img[minc[0]:maxc[0],minc[1]:maxc[1],minc[2]:maxc[2]]
     mask = mask[minc[0]:maxc[0],minc[1]:maxc[1],minc[2]:maxc[2]]
     zoom_factor = np.array(data.GetSpacing())/np.array(target_spacing)
-    zoom_img = resize_ND_volume_to_given_shape(img, zoom_factor, order=1)
-    zoom_mask = resize_Multi_label_to_given_shape(mask, zoom_factor, class_num=class_num)
+    # zoom_img = resize_ND_volume_to_given_shape(img, zoom_factor, order=1)
+    # zoom_mask = resize_Multi_label_to_given_shape(mask, zoom_factor, class_num=class_num)
     zoom_data = sitk.GetImageFromArray(img)
     zoom_data.SetSpacing(data.GetSpacing())
     zoom_data.SetOrigin(data.GetOrigin())
@@ -49,7 +49,7 @@ def crop_and_resample(data_save_path, label_save_path, data_path, label_path, cl
     return
 
 
-data_root = '../../../Data/HaN'
+data_root = 'data/HaN'
 imgname = 'data.nii.gz'
 img_save_name = 'rdata.nii.gz'
 labelname = 'label.nii.gz'

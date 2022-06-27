@@ -170,6 +170,6 @@ def train(config_file):
 
 
 if __name__ == '__main__':
-    config_file = str('config/train_position_pancreas_coarse.txt')
+    config_file = str('config/train_position_han_coarse.txt')
     assert(os.path.isfile(config_file))
     train(config_file)
