@@ -9,17 +9,33 @@ import matplotlib.pyplot as plt
 import SimpleITK as sitk
 import math
 
+def read_file_list(filename, prefix=None, suffix=None):
+    '''
+    Reads a list of files from a line-seperated text file.
+
+    Parameters:
+        filename: Filename to load.
+        prefix: File prefix. Default is None.
+        suffix: File suffix. Default is None.
+    '''
+    with open(filename, 'r') as file:
+        content = file.readlines()
+    filelist = [x.strip() for x in content if x.strip()]
+    if prefix is not None:
+        filelist = [prefix + f for f in filelist]
+    if suffix is not None:
+        filelist = [f + suffix for f in filelist]
+    return filelist
 
 def mkdir(path):
     """
-    创建path所给文件夹
     :param path:
     :return:
     """
     folder = os.path.exists(path)
 
-    if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
-        os.makedirs(path)  # makedirs 创建文件时如果路径不存在会创建这个路径
+    if not folder: 
+        os.makedirs(path)  
         print("---  new folder...  ---")
 
         print("---  OK  ---")
@@ -173,7 +189,6 @@ def convert_label(in_volume, label_convert_source, label_convert_target):
 
 def fill_array(array, divisor):
     """
-    由于下采样操作，需要对输入图像进行填充，使其满足采样比例的整数倍
     :param array: np array: depth*length*height
     :param divisor: The shape of the output file can be divided by divisor
     :return:
@@ -198,12 +213,12 @@ def get_random_roi_sampling_center(input_shape, output_shape, sample_mode, bound
     """
     center = []
     for i in range(len(input_shape)):
-        if (sample_mode[i] == 'full'):  # 不同轴向的裁取方式不同,z轴为full,裁剪范围需全部在输入中
+        if (sample_mode[i] == 'full'):  
             if (bounding_box):
-                x0 = bounding_box[i * 2];
+                x0 = bounding_box[i * 2]
                 x1 = bounding_box[i * 2 + 1]
             else:
-                x0 = 0;
+                x0 = 0
                 x1 = input_shape[i]
         else:
             if (bounding_box):
@@ -212,23 +227,22 @@ def get_random_roi_sampling_center(input_shape, output_shape, sample_mode, bound
             else:
                 x0 = int(output_shape[i] / 2)
                 x1 = input_shape[i] - x0
-        if (x1 <= x0):  # 如果输出大于输入,后期会随机填充或0填充
+        if (x1 <= x0):  
             centeri = int((x0 + x1) / 2)
         else:
-            centeri = random.randint(x0, x1)  # 如输出小于输入,可在[x0,l-x0]范围内任选点
+            centeri = random.randint(x0, x1)  
         center.append(centeri)
     return center
 
 
 def get_bound_coordinate(file, pad=[0, 0, 0]):
     '''
-    输出array非0区域的各维度上下界坐标+-pad
-    :param file: groundtruth图,
-    :param pad: 各维度扩充的大小
+    :param file: groundtruth,
+    :param pad: 
     :return: bound: [min,max]
     '''
     file_size = file.shape
-    nonzeropoint = np.asarray(np.nonzero(file))  # 得到非0点坐标,输出为一个3*n的array，3代表3个维度，n代表n个非0点在对应维度上的坐标
+    nonzeropoint = np.asarray(np.nonzero(file))  
     maxpoint = np.max(nonzeropoint, 1).tolist()
     minpoint = np.min(nonzeropoint, 1).tolist()
     for i in range(len(pad)):
@@ -422,21 +436,18 @@ def resize_ND_volume_to_given_shape(volume, zoom_factor, order=3):
     return out_volume
 
 
-def resize_Multi_label_to_given_shape(volume, zoom_factor, class_num, order=1):
+def resize_Multi_label_to_given_shape(volume, zoom_factor, order=1):
     """
     resize an multi class label to a given shape
     :param volume: the input label, an tensor
     :param zoom_factor: the zoom fatcor of z,x,y
-    :param class_num: the number of classes
     :param order:  the order of the interpolation
     :return:   shape = zoom_factor*original shape z,x,y
     """
+    class_num = np.max(volume)+1
     volume_one = convert_to_one_hot(volume, class_num)
-    volum_one_reshape = [ndimage.interpolation.zoom(volume_one[i + 1], zoom_factor, order=order) for i in
-                         range(class_num - 1)]
-    output = np.zeros_like(volum_one_reshape[0])
-    for i in range(class_num - 1):
-        output = np.int8(np.rint(volum_one_reshape[i]))*(i + 1) + output
+    volum_one_reshape = ndimage.interpolation.zoom(volume_one, np.append(1, zoom_factor), order=order)
+    output = np.argmax(volum_one_reshape, axis=0)
     return output
 
 
@@ -530,48 +541,6 @@ def extract_roi_from_volume(volume, in_center, output_shape, fill='random'):
                       range(in_center[2] - r0[2], in_center[2] + r1[2]))]
     return output
 
-
-def set_roi_to_volume(volume, center, sub_volume):
-    """
-    set the content of an roi of a 3d/4d volume to a sub volume
-    inputs:
-        volume: the input 3D_train/4D volume
-        center: the center of the roi
-        sub_volume: the content of sub volume
-    outputs:
-        output_volume: the output 3D_train/4D volume
-    """
-    volume_shape = volume.shape
-    patch_shape = sub_volume.shape
-    output_volume = volume
-    for i in range(len(center)):
-        if (center[i] >= volume_shape[i]):
-            return output_volume
-    r0max = [int(x / 2) for x in patch_shape]
-    r1max = [patch_shape[i] - r0max[i] for i in range(len(r0max))]
-    r0 = [min(r0max[i], center[i]) for i in range(len(r0max))]
-    r1 = [min(r1max[i], volume_shape[i] - center[i]) for i in range(len(r0max))]
-    patch_center = r0max
-
-    if (len(center) == 3):
-        output_volume[np.ix_(range(center[0] - r0[0], center[0] + r1[0]),
-                             range(center[1] - r0[1], center[1] + r1[1]),
-                             range(center[2] - r0[2], center[2] + r1[2]))] = \
-            sub_volume[np.ix_(range(patch_center[0] - r0[0], patch_center[0] + r1[0]),
-                              range(patch_center[1] - r0[1], patch_center[1] + r1[1]),
-                              range(patch_center[2] - r0[2], patch_center[2] + r1[2]))]
-    elif (len(center) == 4):
-        output_volume[np.ix_(range(center[0] - r0[0], center[0] + r1[0]),
-                             range(center[1] - r0[1], center[1] + r1[1]),
-                             range(center[2] - r0[2], center[2] + r1[2]),
-                             range(center[3] - r0[3], center[3] + r1[3]))] = \
-            sub_volume[np.ix_(range(patch_center[0] - r0[0], patch_center[0] + r1[0]),
-                              range(patch_center[1] - r0[1], patch_center[1] + r1[1]),
-                              range(patch_center[2] - r0[2], patch_center[2] + r1[2]),
-                              range(patch_center[3] - r0[3], patch_center[3] + r1[3]))]
-    else:
-        raise ValueError("array dimension should be 3 or 4")
-    return output_volume
 
 
 def get_roi(volume, margin):
@@ -690,38 +659,3 @@ def binary_dice3d(s, g):
     s2 = g.sum()
     dice = 2.0 * s0 / (s1 + s2 + 1e-10)
     return dice
-
-
-def make_overlap_weight(overlap_num):
-    """
-    考虑到网络感受野可能超过图像厚度，故子图边界预测结果相对不可信。
-    在叠加时应考虑加权，对每张图中心区域预测结果给予高权重，边界低权重。
-    :return:
-    """
-
-    if overlap_num % 2 == 0:
-        weight = [1 / (1 + abs(i - overlap_num // 2 - 0.5)) for i in range(1, overlap_num + 1)]
-    else:
-        weight = [1 / (1 + abs(i - overlap_num // 2)) for i in range(1, overlap_num + 1)]
-
-    return weight
-
-
-def zoom_data(file, mode='img', zoom_factor=[1, 1, 1], class_number=0):
-    """
-    对数据进行插值并储存，
-    :param data_root: 数据所在上层目录
-    :param save_root: 存储的顶层目录
-    :zoom_factor:   缩放倍数
-    :return:
-    """
-
-    if mode == 'label':
-        intfile = np.int16(file)
-        # zoom_file = np.int16(resize_Multi_label_to_given_shape(intfile, zoom_factor, class_number, order=2))
-        zoom_file = ndimage.interpolation.zoom(file, zoom_factor, order=0)
-    elif mode == 'img':
-        zoom_file = ndimage.interpolation.zoom(file, zoom_factor, order=3)
-    else:
-        KeyError('please choose img or label mode')
-    return zoom_file
