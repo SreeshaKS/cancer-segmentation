@@ -1,9 +1,8 @@
 [data]
-data_root             = ../../Data/Pancreas
-image_name            = norm_rdata.nii.gz
-label_name            = 
-iter_num              = 8000
-batch_size            = 24
+train_image_list      = ../config/data/TCIA-Pancreas/train_image.txt
+valid_image_list      = ../config/data/TCIA-Pancreas/valid_image.txt
+iter_num              = 80
+batch_size            = 6
 random_scale          = False
 random_rotate         = False
 patch_size            = [48, 48, 48]
@@ -18,7 +17,7 @@ dilation                = 1
 slice_margin            = 3
 class_num               = 3
 input_channel           = 1
-distance_ratio          = 700
+distance_ratio          = 50
 
 [training]
 load_weight        = False
@@ -32,9 +31,9 @@ test_step          = 1
 test_iter          = 25
 print_step         = 40
 random_seed        = 133
-small_move         = False
+small_move         = True
 fluct_range        = [20,20,20]
 num_worker         = 12
-model_pre_trained  = 
-pnet_save_name  = ../weights/Pnet_2/Pnet_2_24_panc_coarse
+load_memory        = False
+pnet_save_name  = ../weights/Pnet_2/Pnet_2_24_panc_fine
 best_loss          = 1000

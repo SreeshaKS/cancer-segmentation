@@ -8,7 +8,6 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from Pnet import Pnet
 from Pnet_2 import Pnet_2
 from Pnet_3 import Pnet_3
-
 class NetFactory(object):
     @staticmethod
     def create(name):
@@ -17,7 +16,7 @@ class NetFactory(object):
 
         if name == 'Pnet_2':
             return Pnet_2
-        
+
         if name == 'Pnet_3':
             return Pnet_3
             
