@@ -1,0 +1,28 @@
+[data]
+query_image_list      = ../config/data/StructSeg/test_image.txt
+query_label_list      = ../config/data/StructSeg/test_label.txt
+support_image_list    = ../config/data/StructSeg/valid_image.txt
+support_label_list    = ../config/data/StructSeg/valid_label.txt
+label_wanted_ls       = [1,6,7,8]
+multi_run_ensemble_num = 15
+fine_detection        = True
+patch_size            = [16,64,64]
+
+[coarse_pnetwork]
+net_type                = Pnet
+base_feature_number     = 16
+class_num               = 3
+input_channel           = 1
+distance_ratio          = 300
+
+[fine_pnetwork]
+net_type                = Pnet
+base_feature_number     = 16
+class_num               = 3
+input_channel           = 1
+distance_ratio          = 300
+
+[testing]
+load_weight        = True
+coarse_pnet_load_path = ../weights/Pnet/
+fine_pnet_load_path   = ../weights/Pnet/
